@@ -4,7 +4,9 @@
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello, World!");
+            //Testen der Funktionalität:
+            //Parkhaus erstesParkhaus = new Parkhaus(200);
+            //erstesParkhaus.ZeigeFreiePlaetze();
         }
     }
 }
