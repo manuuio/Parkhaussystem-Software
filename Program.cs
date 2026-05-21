@@ -5,8 +5,8 @@
         static void Main(string[] args)
         {
             //Testen der Funktionalität:
-            //Parkhaus erstesParkhaus = new Parkhaus(200);
-            //erstesParkhaus.ZeigeFreiePlaetze();
+            Parkhaus erstesParkhaus = new Parkhaus(200);
+            erstesParkhaus.ZeigeFreiePlaetze();
         }
     }
 }

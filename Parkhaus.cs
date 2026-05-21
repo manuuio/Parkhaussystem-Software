@@ -17,49 +17,103 @@ namespace Parkhaussystem_Software
         // welche sich an verschiedenen Stellen im verwalteten Speicher befinden.
         // Da Motorrad von Fahrzeug erbt, können hier auch Motorrad-Objekte verwaltet werden.
         private List<Fahrzeug> _belegteFahrzeuge;
-
+        
 
         public Parkhaus(int maxPlaetze)
         {
             this._maxPlaetze = maxPlaetze;
+            // Die Listen müssen initialisiert werden (existieren) bevor jemand einfährt.
             _freiePlaetze = new List<string>();
-        }
+            _belegteFahrzeuge = new List<Fahrzeug>();
 
-        public void ZeigeFreiePlaetze()
-        {
+
+            // ==== Ich habe diesen gesammten Block von "ZeigeFreiePlaetze()" in den Konstruktor verschoben. ==== //
+
             Random rnd = new Random();
             // Da die angegebene "maxValue" im Parameter nicht inklusive ist, steht am Ende das "+1".
             // Problem = int von rnd.Next kann nicht in List convertiert werden.
             // Lösung = Bemerkt dass eine lokale Variable reicht um die freien Plätze für die for loop zu speichern.
-            int rndFreiePlätze = rnd.Next(_maxPlaetze + 1);
+
+            int rndFreiePlaetze = rnd.Next(_maxPlaetze + 1);
+
+            // rnd.Next auf 0 setzen um zu testen ob die Liste "_freiePlaetze;" dann wirklich keine Elemente hat.
+            //int rndFreiePlaetze = rnd.Next(0); // Funktioniert, gibt: "Es gibt im moment keine freien Parkplätze." aus.
 
             // Problem = Wie füge ich diese Random zahl der maxPlaetze in eine liste sodass
             // ich später alle freien Parkplaetze zur auswahl ausgeben kann.
             // Lösung = mit der .Add funktion in einem loop und implizirter Konvertierung durch dass "P"
-            for (int i = 1; i <= rndFreiePlätze; i++)
+            for (int i = 1; i <= rndFreiePlaetze; i++)
             {
                 _freiePlaetze.Add("P" + i);
             }
 
-            Console.WriteLine($"Anzahl freier Parkplätze: \n{rndFreiePlätze}");
 
-            foreach (var platz in _freiePlaetze)
+            // ==== Ich habe diesen gesammten Block von "ZeigeFreiePlaetze()" in den Konstruktor verschoben. ==== //
+
+
+        }
+
+        // Prüft ob es freie Parkplätze gibt und gibt diese dann aus.
+        public void ZeigeFreiePlaetze()
+        {
+            if (_freiePlaetze.Count > 0) 
+            { 
+                Console.WriteLine($"Anzahl freier Parkplätze: \n{_freiePlaetze.Count}.");
+                Console.WriteLine($"Verfügbare Parkplatznummern: \n");
+                foreach (var platz in _freiePlaetze)
+                {
+                    Console.WriteLine($"{platz}");
+                }
+            }
+            else
             {
-                Console.WriteLine($"Wähle einen beliebigen Parkplatz: \n{platz}");
+                Console.WriteLine($"Es gibt im moment keine freien Parkplätze.");
             }
         }
 
+        // Prüft ob die eingegebene Platznummer in der Liste der freien Plätze vorhanden ist.
         public bool IstPlatzFrei(string platznummer)
         {
-            return true; // Platzhalter
+            if (_freiePlaetze.Contains(platznummer))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
-        public void FahrzeugEinfahren(string platznummer)
+        // Liest die Fahrereingabe, prüft sie, erstellt ein Fahrzeug-Objekt und blockiert den Platz.
+        // Dokumentation: Beim Implementieren festgestellt dass platznummer kein Parameter sein muss da die Eingabe innerhalb der Methode über Console.ReadLine() eingelesen wird.
+        // Problem: Herausfinden welche schleife am besten für die Kontrollstruktur ist.
+        public void FahrzeugEinfahren()
         {
+            Console.WriteLine($"Wähle einen beliebigen Parkplatz: \n");
+            string gewaehlteNummer = Console.ReadLine() ?? "";
+
+            while (gewaehlteNummer == "" || !IstPlatzFrei(gewaehlteNummer))
+            {
+                Console.WriteLine("Parkplatz nicht frei oder vorhanden, \n" +
+                    "bitte einen der oben aufgelisteten Parkplatznummern eingeben. \n" +
+                    "Zum Beispiel: 'P34' etc.");
+                gewaehlteNummer = Console.ReadLine() ?? "";
+            }
+
+            // Problem: Wie bekomme ich die gewaehlteNummer in "_belegteFahrzeuge"
+            // Lösung: Ein neues Fahrzeug Objekt erstellen und dies in der "_belegteFahrzeuge" List<Fahrzeug> speichern.
+            Fahrzeug eingefahrenesFahrzeug = new Fahrzeug(gewaehlteNummer);
+            _belegteFahrzeuge.Add(eingefahrenesFahrzeug);
+            _freiePlaetze.Remove(gewaehlteNummer);
 
         }
 
-        public void FahrzeugAusfahren(string platznummer)
+
+
+
+        // Liest die Fahrereingabe, berechnet Kosten, gibt den Platz wieder frei.
+        // Dokumentation: Beim Implementieren festgestellt dass platznummer kein Parameter sein muss da die Eingabe innerhalb der Methode über Console.ReadLine() eingelesen wird.
+        public void FahrzeugAusfahren()
         {
 
         }
