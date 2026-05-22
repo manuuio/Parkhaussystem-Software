@@ -100,22 +100,81 @@ namespace Parkhaussystem_Software
                 gewaehlteNummer = Console.ReadLine() ?? "";
             }
 
-            // Problem: Wie bekomme ich die gewaehlteNummer in "_belegteFahrzeuge"
-            // Lösung: Ein neues Fahrzeug Objekt erstellen und dies in der "_belegteFahrzeuge" List<Fahrzeug> speichern.
-            Fahrzeug eingefahrenesFahrzeug = new Fahrzeug(gewaehlteNummer);
-            _belegteFahrzeuge.Add(eingefahrenesFahrzeug);
-            _freiePlaetze.Remove(gewaehlteNummer);
+
+            Console.WriteLine($"Fahren sie ein Motorrad? (j/n):");
+            string istMotorrad = Console.ReadLine() ?? "";
+
+            // Wir fangen alle ungültige eingaben in einer Schleife ab.
+            while (istMotorrad != "j" && istMotorrad != "n")
+            {
+                Console.WriteLine("Ungültige Eingabe!");
+                Console.WriteLine($"Fahren sie ein Motorrad? Bitte antworten sie mit 'j' oder 'n'");
+                istMotorrad = Console.ReadLine() ?? "";
+            }
+
+            if(istMotorrad == "j")
+            {
+                Motorrad eingefahrenesMotorrad = new Motorrad(gewaehlteNummer);
+                _belegteFahrzeuge.Add(eingefahrenesMotorrad);
+                _freiePlaetze.Remove(gewaehlteNummer);
+            }
+            else if (istMotorrad == "n")
+            {
+                // Problem: Wie bekomme ich die gewaehlteNummer in "_belegteFahrzeuge"
+                // Lösung: Ein neues Fahrzeug Objekt erstellen und dies in der "_belegteFahrzeuge" List<Fahrzeug> speichern.
+                Fahrzeug eingefahrenesFahrzeug = new Fahrzeug(gewaehlteNummer);
+                _belegteFahrzeuge.Add(eingefahrenesFahrzeug);
+                _freiePlaetze.Remove(gewaehlteNummer);
+            }
 
         }
 
 
 
-
-        // Liest die Fahrereingabe, berechnet Kosten, gibt den Platz wieder frei.
+        // Berechnet Kosten, gibt den Platz wieder frei.
         // Dokumentation: Beim Implementieren festgestellt dass platznummer kein Parameter sein muss da die Eingabe innerhalb der Methode über Console.ReadLine() eingelesen wird.
         public void FahrzeugAusfahren()
         {
+            Console.WriteLine("Wilkommen zurück! Bitte geben sie ihre Parkplatznummer ein:");
+            string gesuchteParkplatznummer = Console.ReadLine() ?? "";
 
+            while (gesuchteParkplatznummer == "")
+            {
+                Console.WriteLine("Parkplatzeingabe fehlerhaft, \n" +
+                    "bitte geben sie ihre bei der Einfahrt ausgewählte Parknummer ein,\n" +
+                    "zum Beispiel: 'P34' etc.");
+                gesuchteParkplatznummer = Console.ReadLine() ?? "";
+            }
+
+            bool fahrzeugGefunden = false;
+            while (!fahrzeugGefunden)
+            {
+                foreach (var fahrzeug in _belegteFahrzeuge)
+                {
+                    var tempPlatznummer = fahrzeug.GetMeinePlatznummer();
+
+                    if (gesuchteParkplatznummer == tempPlatznummer)
+                    {
+                        fahrzeugGefunden = true;
+                        fahrzeug.SetParkdauerMinuten();
+                        double endpreis = fahrzeug.BerechneParkkosten();
+                        Console.WriteLine($"Zu zahlender Betrag: {endpreis:F2} Euro");
+                        _belegteFahrzeuge.Remove(fahrzeug);
+                        _freiePlaetze.Add(fahrzeug.GetMeinePlatznummer());
+                        break;
+                    }
+                }
+                if (!fahrzeugGefunden)
+                {
+
+                    Console.WriteLine($"Die eingegebene Parkplatznummer: {gesuchteParkplatznummer} existiert nicht. \n" +
+                        $"bitte geben sie ihre bei der Einfahrt ausgewählte Parknummer ein,\n" +
+                        $"zum Beispiel: 'P34' etc.");
+                    gesuchteParkplatznummer = Console.ReadLine() ?? "";
+
+                }
+            }
+            
         }
 
     }

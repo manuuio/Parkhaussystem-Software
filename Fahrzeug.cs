@@ -40,9 +40,16 @@ namespace Parkhaussystem_Software
         }
 
         // Diese Methode ist "virutal" damit Motorrad sie mit "override" überschreiben kann.
+        // Problem: Wenn ich die Parkdauer berechen will sollte ich auf die nächst mögliche Zahl 
+        // basierend auf 30 minuten intervallen aufrudnden.
+        // Lösung: Math.Ceiling nutzen.
+        // 2. Problem: Math.Ceiling akzeptiert nur ein decimal Wert?
+        // 2. Lösung: "_meineParkdauerMinuten" Varaible in double umwandeln und Math.Ceiling's overload für double nutzen.
         public virtual double BerechneParkkosten()
         {
-            return 1.1; // Platzhalter!
+            double parkkostenBloecke = (double)_meineParkdauerMinuten / 30.0;
+            double endpreis = Math.Ceiling(parkkostenBloecke) * _preisProHalbeStunde;
+            return endpreis;
         }
     }
 }
