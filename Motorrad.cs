@@ -13,7 +13,8 @@ namespace Parkhaussystem_Software
 
         public Motorrad(string meinePlatznummer) : base(meinePlatznummer)
         {
-            this._preisProHalbeStunde = 1; // Euro
+            // Tag 5 - Änderung: Ich habe den Preis aufgrund von Sicherheit vor Rundungsfehlern etc. von einem Euro auf einen Cent Wert verändert 
+            this._preisProHalbeStunde = 100; // Cent
         }
 
         // Wir überschreiben die "virtual" Methode aus der Basisklasse "Fahrzeug".

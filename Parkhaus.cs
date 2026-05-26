@@ -17,6 +17,9 @@ namespace Parkhaussystem_Software
         // welche sich an verschiedenen Stellen im verwalteten Speicher befinden.
         // Da Motorrad von Fahrzeug erbt, können hier auch Motorrad-Objekte verwaltet werden.
         private List<Fahrzeug> _belegteFahrzeuge;
+
+        // Liste mit festgelegten Cent Werten welche das Terminal akzeptiert.
+        private List<double> _ertlaubteMuenzen;
         
 
         public Parkhaus(int maxPlaetze)
@@ -25,7 +28,7 @@ namespace Parkhaussystem_Software
             // Die Listen müssen initialisiert werden (existieren) bevor jemand einfährt.
             _freiePlaetze = new List<string>();
             _belegteFahrzeuge = new List<Fahrzeug>();
-
+            _ertlaubteMuenzen = new List<double> { 100, 50, 20, 10 };
 
             // ==== Ich habe diesen gesammten Block von "ZeigeFreiePlaetze()" in den Konstruktor verschoben. ==== //
 
@@ -129,10 +132,101 @@ namespace Parkhaussystem_Software
 
         }
 
+        // Tag 5 - Problem: Die Konsole muss aktualisiert werden um nach dem Münzeinwurf den verbleibende Betrag anzuzeigen.
+        // Tag 5 - Problemlösung: Eine neue Methode welche die RechnungAusgeben() Methode den neuen Wert übergibt und callt.
+        public void RechnungAusgeben(double endpreis, double verbleibenderBetrag, int parkdauerMinuten, string parkplatzNummer, double preisProHalbeStunde)
+        {
+            const double MwSt = 0.19;
+            double nurMwSt = endpreis * MwSt;
+
+            Console.WriteLine(new string('-', 39));
+            Console.ForegroundColor = ConsoleColor.DarkYellow;
+            Console.WriteLine("🅿️  Parkhaus Denis Stuttgart  🅿️");
+            Console.ResetColor();
+            Console.WriteLine(new string('-', 39));
+            Console.WriteLine("Ihre genutzte Parkplatznummer:        " + $"{parkplatzNummer,10}");
+            Console.WriteLine("Ihre Parkdauer in Minuten:        " + $"{parkdauerMinuten,10} Stück");
+            Console.WriteLine("Kosten pro 30 Minuten:       " + $"{preisProHalbeStunde,20:c}");
+            Console.WriteLine(new string('-', 39));
+            Console.WriteLine("\u001b[1mEndpreis:          " + $"{endpreis,20:c}\u001b[0m");
+            Console.WriteLine($"inkl. {MwSt * 100:f0} % MwSt.   " + $"{nurMwSt,20:c}");
+            Console.WriteLine(new string('-', 39));
+            Console.WriteLine("\n");
+            Console.WriteLine("\n");
+            Console.WriteLine("Bitte werfen sie genug Münzen ein um den Endpreis zu begleichen.");
+            Console.WriteLine($"Ihr zu bezahlender Betrag: {verbleibenderBetrag,20:c}\u001b[0m");
+            Console.WriteLine("Wir akzeptieren: 1 Euro, 50 Cent, 20 Cent und 10 Cent Münzen.");
+            Console.WriteLine("Bitte eingeben: 1 Euro = 1, 50 Cent = 50, 20 Cent = 20 und 10 Cent = 10.");
+            Console.WriteLine("Ihre Eingabe:");
+
+        }
+
+        public void RechnungBezahlen(double endpreis, int parkdauerMinuten, string parkplatzNummer, double preisProHalbeStunde)
+        {
+            double eingegebenerBetrag;
+            double verbleibenderBetrag = endpreis;
+            bool vollstaendigBezahlt = false;
+
+            RechnungAusgeben(endpreis, verbleibenderBetrag, parkdauerMinuten, parkplatzNummer, preisProHalbeStunde);
+            bool korrekteEingabe = double.TryParse(Console.ReadLine(), out eingegebenerBetrag);
+
+            // Tag 5 - Problem: Wie prüfe ich am effektivsten ob nur einer der 4 erlaubten Werte eingegeben wurden?
+            while (!korrekteEingabe && !_ertlaubteMuenzen.Contains(eingegebenerBetrag))
+            {
+                Console.WriteLine("Falsche Eingabe. Bitte erneut versuchen:");
+                korrekteEingabe = double.TryParse(Console.ReadLine(), out eingegebenerBetrag);
+            }
 
 
-        // Berechnet Kosten, gibt den Platz wieder frei.
-        // Dokumentation: Beim Implementieren festgestellt dass platznummer kein Parameter sein muss da die Eingabe innerhalb der Methode über Console.ReadLine() eingelesen wird.
+            // Tag 5 - Änderung: if muss zu while geändert werden da der switch laufen muss BIS der verbleibende Betrag = 0 ist.
+            //if (verbleibenderBetrag > 0)
+            // Tag 5 - Problem: Wie gehe ich sicher dass der Fahrer nicht zu viel einwirft.
+            // Tag 5 - Problem: Sollte ich lieber mit Cent Beträgen rechnen? Wie kann das Terminal sonst zwischen 1 Euro und 1 Cent unterscheiden falls wir diese Option anbieten wollen.
+            while (verbleibenderBetrag > 0)
+            {
+                switch(eingegebenerBetrag)
+                {
+                    case 100:
+                        verbleibenderBetrag -= 100;
+                        Console.Clear();
+                        RechnungAusgeben(endpreis, verbleibenderBetrag, parkdauerMinuten, parkplatzNummer, preisProHalbeStunde);
+                        break;
+                    case 50:
+                        verbleibenderBetrag -= 50;
+                        Console.Clear();
+                        RechnungAusgeben(endpreis, verbleibenderBetrag, parkdauerMinuten, parkplatzNummer, preisProHalbeStunde);
+                        break;
+                    case 20:
+                        verbleibenderBetrag -= 20;
+                        Console.Clear();
+                        RechnungAusgeben(endpreis, verbleibenderBetrag, parkdauerMinuten, parkplatzNummer, preisProHalbeStunde);
+                        break;
+                    case 10:
+                        verbleibenderBetrag -= 10;
+                        Console.Clear();
+                        RechnungAusgeben(endpreis, verbleibenderBetrag, parkdauerMinuten, parkplatzNummer, preisProHalbeStunde);
+                        break;
+                }
+            }
+            
+            if (verbleibenderBetrag == 0)
+            {
+                Console.WriteLine("Sie haben ihre Kosten erfolgreich ohne einen Restbetrag beglichen.");
+                Console.WriteLine("Schöne Weiterfahrt!");
+            }
+            // Math.Abs() um die negative Zahl in eine positive Zahl umzuwandeln
+            else if (verbleibenderBetrag < 0)
+            {
+                Console.WriteLine("Sie haben ihre Kosten erfolgreich beglichen.");
+                Console.WriteLine($"Den zu viel bezahlten Betrag von: {Math.Abs(verbleibenderBetrag)} Cent bekommen sie jetzt ausgezahlt.");
+                Console.WriteLine("Schöne Weiterfahrt!");
+            }
+
+        }
+
+
+        // Berechnet Kosten, erstellt Rechnung, speichter Rechnung als JSON und gibt den Platz wieder frei.
+        // Dokumentation: Beim Implementieren festgestellt dass "platznummer" kein Parameter sein muss da die Eingabe innerhalb der Methode über Console.ReadLine() eingelesen wird.
         public void FahrzeugAusfahren()
         {
             Console.WriteLine("Wilkommen zurück! Bitte geben sie ihre Parkplatznummer ein:");
@@ -157,8 +251,13 @@ namespace Parkhaussystem_Software
                     {
                         fahrzeugGefunden = true;
                         fahrzeug.SetParkdauerMinuten();
+                        int parkdauerMinuten = fahrzeug.GetParkdauerMinuten();
                         double endpreis = fahrzeug.BerechneParkkosten();
-                        Console.WriteLine($"Zu zahlender Betrag: {endpreis:F2} Euro");
+                        double preisProHalbeStunde = fahrzeug.GetMeinPreisProHalbeStunde();
+                        string parkplatzNummer = fahrzeug.GetMeinePlatznummer();
+
+                        RechnungBezahlen(endpreis, parkdauerMinuten, parkplatzNummer, preisProHalbeStunde);
+
                         _belegteFahrzeuge.Remove(fahrzeug);
                         _freiePlaetze.Add(fahrzeug.GetMeinePlatznummer());
                         break;

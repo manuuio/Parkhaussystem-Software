@@ -15,11 +15,17 @@ namespace Parkhaussystem_Software
         private int _meineParkdauerMinuten = 0;
 
         // "_preisProHalbeStunde" wird von der Motorrad (Kind-Klasse) überschrieben, deshalb "protected".
-        protected double _preisProHalbeStunde = 2; // Euro
+        // Tag 5 - Änderung: Ich habe den Preis aufgrund von Sicherheit vor Rundungsfehlern etc. von einem Euro auf einen Cent Wert verändert 
+        protected double _preisProHalbeStunde = 200; // Cent
 
         public Fahrzeug(string meinePlatznummer)
         {
             this._meinePlatznummer = meinePlatznummer;
+        }
+
+        public double GetMeinPreisProHalbeStunde()
+        {
+            return _preisProHalbeStunde;
         }
 
         public string GetMeinePlatznummer()
