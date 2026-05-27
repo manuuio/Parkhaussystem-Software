@@ -8,110 +8,132 @@ namespace Parkhaussystem_Software
 {
     public class Parkhaus
     {
+
+
         private int _maxPlaetze;
 
-        // Wir erstellen eine "List<string>" da diese im vergleich zum Array dynamisc ist.
+        // List statt Array damit Plätze dynamisch hinzugefügt und entfernt werden können.
         private List<string> _freiePlaetze;
 
-        // Diese Liste speichert Referenzen auf die erstellten Fahrzeug-Objekte,
-        // welche sich an verschiedenen Stellen im verwalteten Speicher befinden.
-        // Da Motorrad von Fahrzeug erbt, können hier auch Motorrad-Objekte verwaltet werden.
+        // List<Fahrzeug> statt List<string> damit wir beim Ausfahren direkt auf alle
+        // Fahrzeugdaten zugreifen können (Parkdauer, Kosten, Platznummer).
+        // Da Motorrad von Fahrzeug erbt können beide Typen in dieser Liste gespeichert werden.
         private List<Fahrzeug> _belegteFahrzeuge;
 
-        // Liste mit festgelegten Cent Werten welche das Terminal akzeptiert.
+        // Nur diese Münzwerte werden am Terminal akzeptiert (in Cent).
         private List<double> _ertlaubteMuenzen;
         
 
         public Parkhaus(int maxPlaetze)
         {
             this._maxPlaetze = maxPlaetze;
-            // Die Listen müssen initialisiert werden (existieren) bevor jemand einfährt.
             _freiePlaetze = new List<string>();
             _belegteFahrzeuge = new List<Fahrzeug>();
-            _ertlaubteMuenzen = new List<double> { 100, 50, 20, 10 };
+            _ertlaubteMuenzen = new List<double> { 100, 50, 20, 10, 1 };
 
-            // ==== Ich habe diesen gesammten Block von "ZeigeFreiePlaetze()" in den Konstruktor verschoben. ==== //
 
+            // Zufällige Startbelegung im Konstruktor damit beim Programmstart
+            // realistische Parkhaus-Verhältnisse simuliert werden.
             Random rnd = new Random();
-            // Da die angegebene "maxValue" im Parameter nicht inklusive ist, steht am Ende das "+1".
-            // Problem = int von rnd.Next kann nicht in List convertiert werden.
-            // Lösung = Bemerkt dass eine lokale Variable reicht um die freien Plätze für die for loop zu speichern.
 
+            // maxValue bei Next() ist nicht inklusive, deshalb +1.
             int rndFreiePlaetze = rnd.Next(_maxPlaetze + 1);
 
-            // rnd.Next auf 0 setzen um zu testen ob die Liste "_freiePlaetze;" dann wirklich keine Elemente hat.
-            //int rndFreiePlaetze = rnd.Next(0); // Funktioniert, gibt: "Es gibt im moment keine freien Parkplätze." aus.
 
-            // Problem = Wie füge ich diese Random zahl der maxPlaetze in eine liste sodass
-            // ich später alle freien Parkplaetze zur auswahl ausgeben kann.
-            // Lösung = mit der .Add funktion in einem loop und implizirter Konvertierung durch dass "P"
             for (int i = 1; i <= rndFreiePlaetze; i++)
             {
                 _freiePlaetze.Add("P" + i);
             }
 
-
-            // ==== Ich habe diesen gesammten Block von "ZeigeFreiePlaetze()" in den Konstruktor verschoben. ==== //
-
-
         }
 
-        // Prüft ob es freie Parkplätze gibt und gibt diese dann aus.
+        // Zeigt freie Plätze in Spalten an um Scrollen bei vielen Plätzen zu vermeiden.
         public void ZeigeFreiePlaetze()
         {
             if (_freiePlaetze.Count > 0) 
             { 
                 Console.WriteLine($"Anzahl freier Parkplätze: \n{_freiePlaetze.Count}.");
+                Console.WriteLine();
                 Console.WriteLine($"Verfügbare Parkplatznummern: \n");
+                int zaehler = 0;
+                int ebene = 1;
+                Console.ForegroundColor = ConsoleColor.Blue;
+                Console.WriteLine($"🅿 Parkhausebene {ebene}: 🅿️");
+                Console.ResetColor();
                 foreach (var platz in _freiePlaetze)
                 {
-                    Console.WriteLine($"{platz}");
+                    // -6 damit alle Spalten gleich breit sind (linksbündig).
+                    Console.Write($"{platz, -6}");
+                    zaehler++;
+
+                    // % 20 zuerst prüfen da jede durch 20 teilbare Zahl auch durch 10 teilbar is
+                    if (zaehler % 20 == 0)
+                    {
+                        // Neue Ebene anzeigen um Ausgabe übersichtlicher zu gestalten.
+                        ebene++;
+                        Console.WriteLine();
+                        Console.ForegroundColor = ConsoleColor.Blue;
+                        Console.WriteLine($"🅿️ Parkhausebene {ebene}: 🅿️");
+                        Console.ResetColor();
+                        
+                    }
+                    else if (zaehler % 10 == 0)
+                    {
+                        Console.WriteLine();
+                    }
                 }
+                Console.WriteLine();
             }
             else
             {
                 Console.WriteLine($"Es gibt im moment keine freien Parkplätze.");
+                Console.WriteLine($"Bitte kommen Sie später wieder.");
             }
         }
 
-        // Prüft ob die eingegebene Platznummer in der Liste der freien Plätze vorhanden ist.
+        // Prüft ob die eingegebene Platznummer noch in der Liste der freien Plätze ist.
         public bool IstPlatzFrei(string platznummer)
         {
-            if (_freiePlaetze.Contains(platznummer))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            return _freiePlaetze.Contains(platznummer);
         }
 
-        // Liest die Fahrereingabe, prüft sie, erstellt ein Fahrzeug-Objekt und blockiert den Platz.
-        // Dokumentation: Beim Implementieren festgestellt dass platznummer kein Parameter sein muss da die Eingabe innerhalb der Methode über Console.ReadLine() eingelesen wird.
-        // Problem: Herausfinden welche schleife am besten für die Kontrollstruktur ist.
+        // Simuliert das Terminal an der Einfahrt.
         public void FahrzeugEinfahren()
         {
-            Console.WriteLine($"Wähle einen beliebigen Parkplatz: \n");
-            string gewaehlteNummer = Console.ReadLine() ?? "";
-
-            while (gewaehlteNummer == "" || !IstPlatzFrei(gewaehlteNummer))
+            string gewaehlteNummer;
+            do
             {
-                Console.WriteLine("Parkplatz nicht frei oder vorhanden, \n" +
-                    "bitte einen der oben aufgelisteten Parkplatznummern eingeben. \n" +
-                    "Zum Beispiel: 'P34' etc.");
+                ZeigeFreiePlaetze();
+                Console.WriteLine();
+                Console.Write($"Wählen Sie einen beliebigen Parkplatz: ");
                 gewaehlteNummer = Console.ReadLine() ?? "";
-            }
 
+                if(gewaehlteNummer == "" || !IstPlatzFrei(gewaehlteNummer))
+                {
+                    Console.Write("Parkplatz nicht frei oder vorhanden, " +
+                    "bitte einen der oben aufgelisteten Parkplatznummern eingeben. \n" +
+                    "Zum Beispiel: 'P34' etc. Erneute Eingabe wird vorbereitet...");
+                    // Thread.Sleep damit der Nutzer die Fehlermeldung lesen kann bevor die Konsole neu lädt.
+                    Thread.Sleep(4000);
+                    Console.Clear();
+                }
 
-            Console.WriteLine($"Fahren sie ein Motorrad? (j/n):");
+            } while (gewaehlteNummer == "" || !IstPlatzFrei(gewaehlteNummer));
+
+            Console.Clear();
+            Console.ForegroundColor = ConsoleColor.Blue;
+            Console.WriteLine("🅿️  Parkhaus Denis Stuttgart  🅿️");
+            Console.ResetColor();
+            Console.WriteLine($"Sie haben den Parkplatz: '{gewaehlteNummer}' erfolgreich gewählt.");
+            Console.Write($"Fahren Sie ein Motorrad? (j/n): ");
             string istMotorrad = Console.ReadLine() ?? "";
-
-            // Wir fangen alle ungültige eingaben in einer Schleife ab.
+ 
             while (istMotorrad != "j" && istMotorrad != "n")
             {
+                Console.WriteLine("");
                 Console.WriteLine("Ungültige Eingabe!");
-                Console.WriteLine($"Fahren sie ein Motorrad? Bitte antworten sie mit 'j' oder 'n'");
+                Console.WriteLine($"Fahren sie ein Motorrad?");
+                Console.Write($"Bitte antworten sie mit 'j' oder 'n': ");
                 istMotorrad = Console.ReadLine() ?? "";
             }
 
@@ -120,45 +142,66 @@ namespace Parkhaussystem_Software
                 Motorrad eingefahrenesMotorrad = new Motorrad(gewaehlteNummer);
                 _belegteFahrzeuge.Add(eingefahrenesMotorrad);
                 _freiePlaetze.Remove(gewaehlteNummer);
+                Console.WriteLine($"Wir haben ihr Motorrad mit dem Parkplatz '{gewaehlteNummer}' gespeichert.");
+                Console.WriteLine($"Bitte notieren sie sich diese Nummer da Sie diese später bei der Ausfahrt angeben müssen.");
+                Console.WriteLine("Das Programm startet in 10 Sekunden neu...");
+                // Thread.Sleep damit der Nutzer die Parkplatznummer notieren kann.
+                Thread.Sleep(10000);
+                Console.Clear();
             }
             else if (istMotorrad == "n")
             {
-                // Problem: Wie bekomme ich die gewaehlteNummer in "_belegteFahrzeuge"
-                // Lösung: Ein neues Fahrzeug Objekt erstellen und dies in der "_belegteFahrzeuge" List<Fahrzeug> speichern.
                 Fahrzeug eingefahrenesFahrzeug = new Fahrzeug(gewaehlteNummer);
                 _belegteFahrzeuge.Add(eingefahrenesFahrzeug);
                 _freiePlaetze.Remove(gewaehlteNummer);
+                Console.WriteLine($"Wir haben ihr Fahrzeug mit dem Parkplatz '{gewaehlteNummer}' gespeichert.");
+                Console.WriteLine($"Bitte notieren sie sich diese Nummer da Sie diese später bei der Ausfahrt angeben müssen.");
+                Console.WriteLine("Das Programm startet in 10 Sekunden neu...");
+                // Thread.Sleep damit der Nutzer die Parkplatznummer notieren kann.
+                Thread.Sleep(10000);
+                Console.Clear();
             }
 
         }
 
-        // Tag 5 - Problem: Die Konsole muss aktualisiert werden um nach dem Münzeinwurf den verbleibende Betrag anzuzeigen.
-        // Tag 5 - Problemlösung: Eine neue Methode welche die RechnungAusgeben() Methode den neuen Wert übergibt und callt.
+        // Gibt die Rechnung formatiert aus. Alle Beträge intern in Cent, Ausgabe in Euro.
         public void RechnungAusgeben(double endpreis, double verbleibenderBetrag, int parkdauerMinuten, string parkplatzNummer, double preisProHalbeStunde)
         {
+            string linie = new string('-', 50);
+            string titel = "🅿️  Parkhaus Denis Stuttgart  🅿️";
+            int breiteDerRechnung = 50;
+
+            // Titel zentrieren: linkes Padding = (Gesamtbreite - Titellänge) / 2
+            int padding = (breiteDerRechnung - titel.Length) / 2;
+
             const double MwSt = 0.19;
             double nurMwSt = endpreis * MwSt;
 
-            Console.WriteLine(new string('-', 39));
-            Console.ForegroundColor = ConsoleColor.DarkYellow;
-            Console.WriteLine("🅿️  Parkhaus Denis Stuttgart  🅿️");
+            Console.WriteLine(linie);
+            Console.ForegroundColor = ConsoleColor.Blue;
+            Console.WriteLine(titel.PadLeft(padding + titel.Length));
             Console.ResetColor();
-            Console.WriteLine(new string('-', 39));
-            Console.WriteLine("Ihre genutzte Parkplatznummer:        " + $"{parkplatzNummer,10}");
-            Console.WriteLine("Ihre Parkdauer in Minuten:        " + $"{parkdauerMinuten,10} Stück");
-            Console.WriteLine("Kosten pro 30 Minuten:       " + $"{preisProHalbeStunde,20:c}");
-            Console.WriteLine(new string('-', 39));
-            Console.WriteLine("\u001b[1mEndpreis:          " + $"{endpreis,20:c}\u001b[0m");
-            Console.WriteLine($"inkl. {MwSt * 100:f0} % MwSt.   " + $"{nurMwSt,20:c}");
-            Console.WriteLine(new string('-', 39));
-            Console.WriteLine("\n");
+            Console.WriteLine(linie);
+            // PadRight(30) für linken Text + PadLeft(20) für rechten Wert = 50 Zeichen Gesamtbreite.
+            Console.WriteLine("Ihre genutzte Parkplatznummer:".PadRight(30) + $"{parkplatzNummer.PadLeft(20)}");
+            Console.WriteLine("Ihre Parkdauer in Minuten:".PadRight(30) + $"{(parkdauerMinuten + " Minuten").ToString().PadLeft(20)}");
+            Console.WriteLine("Kosten pro 30 Minuten:".PadRight(30) + $"{(preisProHalbeStunde / 100.0 + " €").ToString().PadLeft(20)}");
+            Console.WriteLine(linie);
+            Console.WriteLine("Endpreis:".PadRight(30) + $"{(endpreis / 100.0 + " €").ToString().PadLeft(20)}");
+            Console.WriteLine($"inkl. {MwSt * 100:f0} % MwSt.".PadRight(30) + $"{(nurMwSt / 100.0 + " €").ToString().PadLeft(20)}");
+            Console.WriteLine(linie);
             Console.WriteLine("\n");
             Console.WriteLine("Bitte werfen sie genug Münzen ein um den Endpreis zu begleichen.");
-            Console.WriteLine($"Ihr zu bezahlender Betrag: {verbleibenderBetrag,20:c}\u001b[0m");
-            Console.WriteLine("Wir akzeptieren: 1 Euro, 50 Cent, 20 Cent und 10 Cent Münzen.");
-            Console.WriteLine("Bitte eingeben: 1 Euro = 1, 50 Cent = 50, 20 Cent = 20 und 10 Cent = 10.");
-            Console.WriteLine("Ihre Eingabe:");
+            Console.WriteLine($"Ihr offener Betrag:".PadRight(30) + $"{(verbleibenderBetrag / 100.0 + " €").ToString().PadLeft(20)}");
+            Console.WriteLine("");
+        }
 
+        // Zeigt akzeptierte Münzwerte an und fordert zur Eingabe auf.
+        public void ZahlungsMoeglichkeiten()
+        {
+            Console.WriteLine("Wir akzeptieren nur: 1 Euro, 50 Cent, 20 Cent und 10 Cent Münzen.");
+            Console.WriteLine("Bitte eingeben: 1 Euro = 1, 50 Cent = 50, 20 Cent = 20 und 10 Cent = 10.");
+            Console.Write("Ihre Eingabe: ");
         }
 
         public void RechnungBezahlen(double endpreis, int parkdauerMinuten, string parkplatzNummer, double preisProHalbeStunde)
@@ -168,65 +211,74 @@ namespace Parkhaussystem_Software
             bool vollstaendigBezahlt = false;
 
             RechnungAusgeben(endpreis, verbleibenderBetrag, parkdauerMinuten, parkplatzNummer, preisProHalbeStunde);
+            ZahlungsMoeglichkeiten();
             bool korrekteEingabe = double.TryParse(Console.ReadLine(), out eingegebenerBetrag);
 
-            // Tag 5 - Problem: Wie prüfe ich am effektivsten ob nur einer der 4 erlaubten Werte eingegeben wurden?
-            while (!korrekteEingabe && !_ertlaubteMuenzen.Contains(eingegebenerBetrag))
+            // || statt && weil wiederholt werden soll wenn die Eingabe KEIN gültiger double ist
+            // ODER nicht in der erlaubten Münzliste ist — nicht nur wenn beides gleichzeitig falsch ist.
+            while (!korrekteEingabe || !_ertlaubteMuenzen.Contains(eingegebenerBetrag))
             {
-                Console.WriteLine("Falsche Eingabe. Bitte erneut versuchen:");
+                Console.Write("Falsche Eingabe. Bitte erneut versuchen: ");
                 korrekteEingabe = double.TryParse(Console.ReadLine(), out eingegebenerBetrag);
             }
 
-
-            // Tag 5 - Änderung: if muss zu while geändert werden da der switch laufen muss BIS der verbleibende Betrag = 0 ist.
-            //if (verbleibenderBetrag > 0)
-            // Tag 5 - Problem: Wie gehe ich sicher dass der Fahrer nicht zu viel einwirft.
-            // Tag 5 - Problem: Sollte ich lieber mit Cent Beträgen rechnen? Wie kann das Terminal sonst zwischen 1 Euro und 1 Cent unterscheiden falls wir diese Option anbieten wollen.
             while (verbleibenderBetrag > 0)
             {
-                switch(eingegebenerBetrag)
+                // Intern wird in Cent gerechnet, deshalb 1 Euro Eingabe in 100 Cent umwandeln.
+                if (eingegebenerBetrag == 1)
+                    eingegebenerBetrag = 100;
+
+                switch (eingegebenerBetrag)
                 {
                     case 100:
                         verbleibenderBetrag -= 100;
-                        Console.Clear();
-                        RechnungAusgeben(endpreis, verbleibenderBetrag, parkdauerMinuten, parkplatzNummer, preisProHalbeStunde);
                         break;
                     case 50:
                         verbleibenderBetrag -= 50;
-                        Console.Clear();
-                        RechnungAusgeben(endpreis, verbleibenderBetrag, parkdauerMinuten, parkplatzNummer, preisProHalbeStunde);
                         break;
                     case 20:
                         verbleibenderBetrag -= 20;
-                        Console.Clear();
-                        RechnungAusgeben(endpreis, verbleibenderBetrag, parkdauerMinuten, parkplatzNummer, preisProHalbeStunde);
                         break;
                     case 10:
                         verbleibenderBetrag -= 10;
-                        Console.Clear();
-                        RechnungAusgeben(endpreis, verbleibenderBetrag, parkdauerMinuten, parkplatzNummer, preisProHalbeStunde);
+                        break;
+                    default:
+                        Console.WriteLine("Ungültige Münzeneingabe! Neue Eingabe in 3 Sekunden...");
+                        Thread.Sleep(3000);
                         break;
                 }
+
+                Console.Clear();
+                RechnungAusgeben(endpreis, verbleibenderBetrag, parkdauerMinuten, parkplatzNummer, preisProHalbeStunde);
+                ZahlungsMoeglichkeiten();
+
+                // Keine weitere Eingabe wenn Betrag bereits beglichen oder überzahlt wurde.
+                if (verbleibenderBetrag > 0)
+                {
+                    korrekteEingabe = double.TryParse(Console.ReadLine(), out eingegebenerBetrag);
+                }
             }
-            
+
+            Console.Clear();
+            RechnungAusgeben(endpreis, verbleibenderBetrag, parkdauerMinuten, parkplatzNummer, preisProHalbeStunde);
+            Console.WriteLine();
+
             if (verbleibenderBetrag == 0)
             {
-                Console.WriteLine("Sie haben ihre Kosten erfolgreich ohne einen Restbetrag beglichen.");
-                Console.WriteLine("Schöne Weiterfahrt!");
+                Console.WriteLine("Sie haben ihre Kosten vollständig beglichen.");
             }
-            // Math.Abs() um die negative Zahl in eine positive Zahl umzuwandeln
             else if (verbleibenderBetrag < 0)
             {
                 Console.WriteLine("Sie haben ihre Kosten erfolgreich beglichen.");
+                // Math.Abs() um den negativen Restbetrag als positive Zahl auszugeben.
                 Console.WriteLine($"Den zu viel bezahlten Betrag von: {Math.Abs(verbleibenderBetrag)} Cent bekommen sie jetzt ausgezahlt.");
-                Console.WriteLine("Schöne Weiterfahrt!");
             }
+
+            Console.WriteLine("Schöne Weiterfahrt!");
+            Thread.Sleep(10000);
 
         }
 
-
-        // Berechnet Kosten, erstellt Rechnung, speichter Rechnung als JSON und gibt den Platz wieder frei.
-        // Dokumentation: Beim Implementieren festgestellt dass "platznummer" kein Parameter sein muss da die Eingabe innerhalb der Methode über Console.ReadLine() eingelesen wird.
         public void FahrzeugAusfahren()
         {
             Console.WriteLine("Wilkommen zurück! Bitte geben sie ihre Parkplatznummer ein:");
@@ -234,9 +286,9 @@ namespace Parkhaussystem_Software
 
             while (gesuchteParkplatznummer == "")
             {
-                Console.WriteLine("Parkplatzeingabe fehlerhaft, \n" +
-                    "bitte geben sie ihre bei der Einfahrt ausgewählte Parknummer ein,\n" +
-                    "zum Beispiel: 'P34' etc.");
+                Console.WriteLine($"Die eingegebene Parkplatznummer: '{gesuchteParkplatznummer}' existiert nicht oder gehört nicht zu Ihnen. \n" +
+                        $"Bitte geben sie ihre bei der Einfahrt ausgewählte Parkplatznummer ein. Zum Beispiel: 'P34' etc.");
+                Console.Write($"Ihre Parknummer: ");
                 gesuchteParkplatznummer = Console.ReadLine() ?? "";
             }
 
@@ -249,6 +301,7 @@ namespace Parkhaussystem_Software
 
                     if (gesuchteParkplatznummer == tempPlatznummer)
                     {
+                        Console.Clear();
                         fahrzeugGefunden = true;
                         fahrzeug.SetParkdauerMinuten();
                         int parkdauerMinuten = fahrzeug.GetParkdauerMinuten();
@@ -259,16 +312,20 @@ namespace Parkhaussystem_Software
                         RechnungBezahlen(endpreis, parkdauerMinuten, parkplatzNummer, preisProHalbeStunde);
 
                         _belegteFahrzeuge.Remove(fahrzeug);
-                        _freiePlaetze.Add(fahrzeug.GetMeinePlatznummer());
+                        _freiePlaetze.Add(tempPlatznummer);
+
+                        // Numerisch sortieren damit z.B. P10 nicht vor P2 erscheint (alphabetische Sortierung wäre falsch).
+                        _freiePlaetze.Sort((a, b) => int.Parse(a.Substring(1)).CompareTo(int.Parse(b.Substring(1))));
+
                         break;
                     }
                 }
                 if (!fahrzeugGefunden)
                 {
 
-                    Console.WriteLine($"Die eingegebene Parkplatznummer: {gesuchteParkplatznummer} existiert nicht. \n" +
-                        $"bitte geben sie ihre bei der Einfahrt ausgewählte Parknummer ein,\n" +
-                        $"zum Beispiel: 'P34' etc.");
+                    Console.WriteLine($"Die eingegebene Parkplatznummer: '{gesuchteParkplatznummer}' existiert nicht oder gehört nicht zu Ihnen. \n" +
+                        $"Bitte geben sie ihre bei der Einfahrt ausgewählte Parkplatznummer ein. Zum Beispiel: 'P34' etc.");
+                    Console.Write($"Ihre Parknummer: ");
                     gesuchteParkplatznummer = Console.ReadLine() ?? "";
 
                 }

@@ -1,23 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.ConstrainedExecution;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace Parkhaussystem_Software
 {
+    // Motorrad erbt alle Felder und Methoden von Fahrzeug.
+    // Der alleinige Unterschied ist der günstigere Preis pro 30 Minuten.
     public class Motorrad : Fahrzeug
     {
-        // Keine extra festgelegten Variablen da alles was wir brauchen von Fahrzeug geerbt wird.
-
 
         public Motorrad(string meinePlatznummer) : base(meinePlatznummer)
         {
-            // Tag 5 - Änderung: Ich habe den Preis aufgrund von Sicherheit vor Rundungsfehlern etc. von einem Euro auf einen Cent Wert verändert 
+            // Motorräder zahlen weniger da sie weniger Platz belegen.
             this._preisProHalbeStunde = 100; // Cent
         }
 
-        // Wir überschreiben die "virtual" Methode aus der Basisklasse "Fahrzeug".
+        // override damit bei einem Motorrad-Objekt automatisch der günstigere Preis verwendet wird.
         public override double BerechneParkkosten()
         {
             double parkkostenBloecke = (double)GetParkdauerMinuten() / 30.0;
